@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <HelloWorld :list="list" :currentID="currentID" @selectItem="selectItem" @reset="reset" />
   </div>
 </template>
 
@@ -12,17 +11,39 @@ export default {
   name: 'app',
   components: {
     HelloWorld
+  },
+  data () {
+    return {
+      currentID: 0
+    }
+  },
+  created () {
+    let list = [];
+    for (let i = 0; i < 10; i++) {
+      list.push({
+        id: i+1,
+        name: `选项${i}`
+      })
+    }
+    this.list = list;
+  },
+  methods: {
+    selectItem (id) {
+      this.currentID = id;
+    },
+    reset () {
+      this.currentID = this.list[0].id;
+    }
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+* {
+  margin: 0;
+  padding: 0;
+}
+ul li {
+  list-style: none;
 }
 </style>

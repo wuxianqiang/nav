@@ -1,58 +1,152 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
+  <div class="nav-wrap">
+      <ul
+      ref="nav"
+      class="nav">
+      <li
+        v-for="item in list"
+        :key="item.id"
+        class="nav-item">
+        <span
+          class="nav-text"
+          @click="handleClick(item.id)"
+          :class="{active: currentID===item.id}">
+          {{ item.name }}
+        </span>
+      </li>
     </ul>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  export default {
+    props: {
+      list: {
+        type: Array,
+        default: () => ([])
+      },
+      currentID: {
+        type: Number,
+        default: 0
+      }
+    },
+
+    data () {
+      return {
+        innerWidth: window.innerWidth
+      }
+    },
+
+    watch: {
+      currentID: {
+        immediate: true,
+        handler (value) {
+          const index = this.list.findIndex(item => item.id === value)
+          this.$nextTick(() => {
+            if (index < 0) {
+              this.$refs.nav.scrollLeft = 0
+              this.$emit('reset')
+            } else {
+              const maxWidth = this.$refs.nav.scrollWidth - this.innerWidth
+              const left = this.$refs.nav.scrollLeft
+              const el = this.$refs.nav.children[index]
+              const offsetLeft = el.offsetLeft
+              const width = el.offsetWidth / 2
+              const center = this.innerWidth / 2
+              let distance = offsetLeft - left
+              if (distance < center) {
+                let value = Math.max(left - (center - distance) + width, 0)
+                this.move(value)
+              } else {
+                let value = Math.min(left + (distance - center) + width, maxWidth)
+                this.move(value)
+              }
+            }
+          })
+        }
+      }
+    },
+
+    mounted () {
+      window.addEventListener('resize', () => {
+        this.innerWidth = window.innerWidth
+      })
+    },
+
+    methods: {
+      handleClick (id) {
+        this.$emit('selectItem', id)
+      },
+      move (distance) {
+        let target = distance
+        let source = this.$refs.nav.scrollLeft
+        if (target > source) {
+          let step = (target - source) / 200 * 20
+          const move = () => {
+            let currentScrollLeft = this.$refs.nav.scrollLeft
+            currentScrollLeft += step
+            if (currentScrollLeft >= target) {
+              currentScrollLeft = target;
+              this.$refs.nav.scrollLeft = currentScrollLeft
+            } else {
+              this.$refs.nav.scrollLeft = currentScrollLeft
+              requestAnimationFrame(move)
+            }
+          }
+          requestAnimationFrame(move)
+        } else {
+          let step = (source - target) / 200 * 20
+          const move = () => {
+            let currentScrollLeft = this.$refs.nav.scrollLeft
+            currentScrollLeft -= step
+            if (currentScrollLeft <= target) {
+              currentScrollLeft = target;
+              this.$refs.nav.scrollLeft = currentScrollLeft
+            } else {
+              this.$refs.nav.scrollLeft = currentScrollLeft
+              requestAnimationFrame(move)
+            }
+          }
+          requestAnimationFrame(move)
+        }
+      }
+    }
   }
-}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+.nav-wrap {
+  position: relative;
+  overflow: hidden;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.nav {
+  overflow-x: auto;
+  white-space: nowrap;
+  z-index: 2;
 }
-li {
+.container {
+  position: relative;
+
+}
+.nav-text {
+  line-height: 32px;
   display: inline-block;
-  margin: 0 10px;
+  border-bottom: 2PX solid transparent;
 }
-a {
-  color: #42b983;
+.active {
+  border-bottom: 2PX solid red;
+  color: red;
+}
+.nav-item {
+  display: inline-block;
+  padding: 0 20px;
+}
+.line {
+  width: 0;
+  height: 2px;
+  background: red;
+  position: absolute;
+  left: 0;
+  bottom: 0;
 }
 </style>
